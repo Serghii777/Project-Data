@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  redis_server:
+    container_name: redis_data
+    image: redis:latest
+    environment:
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5433:5433"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile  
+    environment:
+      DB_URL: ${DB_URL}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_SERVER: ${MAIL_SERVER}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres

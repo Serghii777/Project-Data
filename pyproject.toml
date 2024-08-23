@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "project-data"
+version = "0.1.0"
+description = ""
+authors = ["Serghii777 <142201494+Serghii777@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+alembic = "^1.13.2"
+redis = "^5.0.8"
+pydantic = "^2.8.2"
+asyncpg = "^0.29.0"
+greenlet = "^3.0.3"
+uvicorn = "^0.30.6"
+fastapi = "^0.112.1"
+libgravatar = "^1.0.4"
+email-validator = "^2.2.0"
+python-jose = "^3.3.0"
+passlib = "^1.7.4"
+fastapi-mail = "^1.4.1"
+python-multipart = "^0.0.9"
+bcrypt = "^4.2.0"
+
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
