@@ -1,12 +1,11 @@
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from src.models.models import User, Vehicle, ParkingRecord, ParkingRate
+from src.models.models import User, Vehicle, ParkingRecord
 from fastapi import Depends
 from src.database.db import get_db
 from src.models.models import User, Role
 from src.schemas.user import UserCreateSchema
-from libgravatar import Gravatar
 
 # User Repository
 async def create_user(body: UserCreateSchema, db: AsyncSession = Depends(get_db)) -> User:

@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession # type: ignore
 from sqlalchemy import select # type: ignore
 
 from src.repository import admin as repository_admin
-from src.schemas.admin import ParkingLotUpdate, ParkingRateCreate, ParkingRateUpdate, ParkingRecordSchema, UserRoleUpdate, UserStatusUpdate, VehicleCheckSchema
+from src.schemas.admin import ParkingRateCreate, ParkingRateUpdate, ParkingRecordSchema, UserRoleUpdate, UserStatusUpdate, VehicleCheckSchema
 from src.schemas.user import UserReadSchema
 from src.models.models import User, Role
 from src.services.role import RoleAccess
@@ -69,9 +69,9 @@ async def set_parking_rate(
     return rate
 
 
-@router.put("/parking-lot", response_model=ParkingLotUpdate, dependencies=[Depends(role_admin)])
+@router.put("/parking-lot", response_model=ParkingRateUpdate, dependencies=[Depends(role_admin)])
 async def update_parking_spaces(
-    lot_data: ParkingLotUpdate,
+    lot_data: ParkingRateUpdate,
     db: AsyncSession = Depends(get_db)
 ):
     parking_lot = await repository_admin.update_parking_spaces(

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 import uuid
-from pydantic import BaseModel, EmailStr # type: ignore
+from pydantic import BaseModel, EmailStr 
 
 from src.models.models import Role
 
@@ -28,7 +28,7 @@ class ParkingRateCreate(BaseModel):
     class Config:
         from_attributes = True
 
-class ParkingLotUpdate(BaseModel):
+class ParkingRateUpdate(BaseModel):
     total_spaces: int
     available_spaces: int
 

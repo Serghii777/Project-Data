@@ -2,9 +2,10 @@ import csv
 from datetime import datetime
 from typing import Optional
 import uuid
+from src.schemas.admin import VehicleCheckSchema
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.models.models import BlackListCar, ParkingLot, ParkingRate, ParkingRecord, User, Role, Vehicle
+from src.models.models import BlackListCar, ParkingRate, ParkingRecord, User, Role, Vehicle
 
 async def change_user_status(user: User, is_active: bool, db: AsyncSession):
     user.is_active = is_active
@@ -28,7 +29,7 @@ async def set_parking_rate(rate_per_hour: int, max_daily_rate: Optional[int], cu
     return new_rate
 
 async def update_parking_spaces(total_spaces: int, available_spaces: int, db: AsyncSession):
-    parking_lot = await db.execute(select(ParkingLot).order_by(ParkingLot.created_at.desc()))
+    parking_lot = await db.execute(select(ParkingRate).order_by(ParkingRate.created_at.desc()))
     parking_lot = parking_lot.scalar_one_or_none()
     if parking_lot:
         parking_lot.total_spaces = total_spaces
@@ -37,7 +38,7 @@ async def update_parking_spaces(total_spaces: int, available_spaces: int, db: As
         await db.refresh(parking_lot)
         return parking_lot
     else:
-        new_parking_lot = ParkingLot(
+        new_parking_lot = ParkingRate(
             total_spaces=total_spaces,
             available_spaces=available_spaces
         )
