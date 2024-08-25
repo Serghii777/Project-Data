@@ -2,9 +2,9 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, Integer, ForeignKey, DateTime, func, Column, Boolean, Enum, CheckConstraint, UUID, Text
+from sqlalchemy import String, Integer, ForeignKey, DateTime, func, Column, Boolean, Enum, UUID, BigInteger
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import DeclarativeBase, relationship, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, relationship, mapped_column
 
 
 class Base(DeclarativeBase):
@@ -25,12 +25,13 @@ class User(Base):
     email = Column(String(length=320), unique=True, index=True, nullable=False)
     password = Column(String(length=1024), nullable=False)
     role = Column(Enum(Role), default=Role.user, nullable=False)
+    avatar = Column(String(100))
     refresh_token = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     confirmed = Column(Boolean, default=False, nullable=False)
     is_active = Column(Boolean, default=False)
-
+    phone = Column(BigInteger, nullable=False)
     vehicles = relationship("Vehicle", back_populates="user")  
 
     @hybrid_property

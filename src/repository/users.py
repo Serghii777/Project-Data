@@ -6,11 +6,18 @@ from fastapi import Depends
 from src.database.db import get_db
 from src.models.models import User, Role
 from src.schemas.user import UserCreateSchema
+from libgravatar import Gravatar
 
 # User Repository
 async def create_user(body: UserCreateSchema, db: AsyncSession = Depends(get_db)) -> User:
+    avatar = None
+    try:
+        g = Gravatar(email=body.email)
+        avatar = g.get_image()
+    except Exception as err:
+        print(err)
 
-    new_user = User(**body.model_dump())
+    new_user = User(**body.model_dump(), avatar=avatar)
 
     query = select(func.count(User.id))
     count = await db.execute(query)
