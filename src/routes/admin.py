@@ -6,7 +6,7 @@ from sqlalchemy import select # type: ignore
 from src.repository import admin as repository_admin
 from src.schemas.admin import ParkingRateCreate, ParkingRateUpdate, ParkingRecordSchema, UserRoleUpdate, UserStatusUpdate, VehicleCheckSchema
 from src.schemas.user import UserReadSchema
-from src.models.models import User, Role
+from src.models.models import ParkingRate, User, Role, Vehicle
 from src.services.role import RoleAccess
 from src.services.auth import auth_service
 from src.database.db import get_db
@@ -70,32 +70,38 @@ async def set_parking_rate(
 
 
 @router.put("/parking-lot", response_model=ParkingRateUpdate, dependencies=[Depends(role_admin)])
-async def update_parking_spaces(
-    lot_data: ParkingRateUpdate,
+async def get_parking_status(
     db: AsyncSession = Depends(get_db)
 ):
-    parking_lot = await repository_admin.update_parking_spaces(
-        total_spaces=lot_data.total_spaces,
-        available_spaces=lot_data.available_spaces,
-        db=db
-    )
-    return parking_lot
+    # Отримання останніх даних по парковці
+    parking_lot = await db.execute(select(ParkingRate).order_by(ParkingRate.created_at.desc()))
+    parking_lot = parking_lot.scalar_one_or_none()
+    
+    if parking_lot:
+        # Розрахунок кількості зайнятих місць
+        parking_lot.occupied_spaces = parking_lot.total_spaces - parking_lot.available_spaces
+        return parking_lot
+    else:
+        raise HTTPException(status_code=404, detail="Parking lot data not found.")
 
 
 @router.put("/parking-info", response_model=ParkingRateUpdate, dependencies=[Depends(role_admin)])
 async def update_parking_info(
-    lot_data: ParkingRateUpdate,  
+    vehicle_data: VehicleCheckSchema,
     db: AsyncSession = Depends(get_db)
 ):
-    parking_info = await repository_admin.update_parking_info(
-        total_spaces=lot_data.total_spaces,
-        available_spaces=lot_data.available_spaces,
-        rate_per_hour=lot_data.rate_per_hour,  
-        max_daily_rate=lot_data.max_daily_rate,
-        currency=lot_data.currency,
-        db=db
-    )
-    return parking_info
+    # Отримання даних про автомобіль за номером
+    vehicle = await db.execute(select(Vehicle).where(Vehicle.license_plate == vehicle_data.license_plate))
+    vehicle = vehicle.scalar_one_or_none()
+
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found.")
+
+    # Створення звіту
+    report_filename = await repository_admin.generate_parking_report(vehicle.id, db)
+
+    return {"vehicle": vehicle, "report": report_filename}
+
 
 @router.post("/add_car_to_parking", response_model=ParkingRecordSchema, dependencies=[Depends(role_admin)])
 async def add_to_parking(vehicle_check: VehicleCheckSchema, db: AsyncSession = Depends(get_db)):

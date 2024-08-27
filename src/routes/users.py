@@ -1,14 +1,17 @@
 import uuid
-from fastapi import APIRouter, Depends, status, HTTPException, Request, BackgroundTasks # type: ignore
-from sqlalchemy.ext.asyncio import AsyncSession # type: ignore
-from fastapi.templating import Jinja2Templates # type: ignore
-from starlette.responses import HTMLResponse # type: ignore
+import os
+import tempfile
+from fastapi import APIRouter, Depends, status, HTTPException, Request, BackgroundTasks, UploadFile, File
+from sqlalchemy.ext.asyncio import AsyncSession 
+from fastapi.templating import Jinja2Templates 
+from starlette.responses import HTMLResponse, JSONResponse
 from src.database.db import get_db
 from src.models.models import User
 from src.repository.users import UserRepository, VehicleRepository, ParkingRecordRepository
 from src.services.auth import auth_service
 from src.schemas.user import ParkingHistorySchema, UserDbSchema, RequestEmail
 from src.services.email import send_email_reset_password
+from cv_service import initiate
 
 router = APIRouter(prefix="/users", tags=["users"])
 templates = Jinja2Templates(directory="src/services/templates")
@@ -85,3 +88,24 @@ async def get_parking_history(license_plate: str, db: AsyncSession = Depends(get
     ]
     
     return history_with_plate
+
+
+@router.post("/upload_image/")
+async def upload_license_plate(
+    file: UploadFile = File(...), db: AsyncSession = Depends(get_db)
+):
+    try:
+        # Save file temporarily
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
+            tmp_file.write(await file.read())
+            tmp_file_path = tmp_file.name
+
+        # Pass the image to your ML model to get the license plate text
+        license_plate_text = initiate.main(tmp_file_path)
+
+        # Optionally, store the result in the database if needed
+        os.remove(tmp_file_path)
+
+        return JSONResponse({"license_plate": license_plate_text})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
