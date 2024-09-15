@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, EmailStr, ConfigDict, field_validator, model_validator, root_validator
+from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from pydantic.v1 import validator
 
 
@@ -24,14 +24,6 @@ class UserDbSchema(UserReadSchema):
     is_active: bool
     model_config = ConfigDict(from_attributes=True)
     phone: Optional[int] = None
-    vehicles: Optional[List["VehicleReadSchema"]] = None
-    parking_records: Optional[List["ParkingRecordReadSchema"]] = None
-    black_list: Optional[List["BlackListReadSchema"]] = None
-    parking_duration: Optional[int] = None
-    parking_history: Optional[List["ParkingHistorySchema"]] = None
-    parking_last_entry: Optional[datetime] = None
-    parking_last_exit: Optional[datetime] = None
-    parking_cost: Optional[int] = None
 
 
 class UserResponseSchema(BaseModel):
@@ -74,45 +66,3 @@ class LogoutResponseSchema(BaseModel):
 
 class RequestNewPassword(BaseModel):
     new_password: str = Field(min_length=8, max_length=12)
-    
-
-class VehicleReadSchema(BaseModel):
-    id: uuid.UUID
-    license_plate: str
-    model: str
-    color: str
-
-    class Config:
-        orm_mode = True
-
-
-class ParkingRecordReadSchema(BaseModel):
-    id: uuid.UUID
-    vehicle_id: uuid.UUID
-    entry_time: datetime
-    exit_time: Optional[datetime] = None
-    duration: Optional[int] = None
-    cost: Optional[int] = None
-
-    class Config:
-        orm_mode = True
-
-
-class BlackListReadSchema(BaseModel):
-    id: uuid.UUID
-    vehicle_id: uuid.UUID
-    reason: str
-
-    class Config:
-        orm_mode = True
-
-
-class ParkingHistorySchema(BaseModel):
-    license_plate: str  
-    entry_time: datetime
-    exit_time: Optional[datetime] = None
-    duration_minutes: Optional[int] = None  
-    cost: Optional[int] = None  
-
-    class Config:
-        orm_mode = True

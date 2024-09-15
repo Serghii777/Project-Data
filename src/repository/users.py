@@ -1,7 +1,7 @@
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from src.models.models import User, Vehicle, ParkingRecord
+from src.models.models import User
 from fastapi import Depends
 from src.database.db import get_db
 from src.models.models import User, Role
@@ -69,69 +69,3 @@ class UserRepository:
         await self.db.commit()
         await self.db.refresh(user)
         return user
-
-
-class VehicleRepository:
-    def __init__(self, db: AsyncSession):
-        self.db = db
-
-    async def get_vehicle_by_license_plate(self, license_plate: str):
-        result = await self.db.execute(select(Vehicle).where(Vehicle.license_plate == license_plate))
-        return result.scalar_one_or_none()
-
-    async def create_vehicle(self, vehicle: Vehicle):
-        self.db.add(vehicle)
-        await self.db.commit()
-        await self.db.refresh(vehicle)
-        return vehicle
-
-    async def is_vehicle_registered(self, license_plate: str) -> bool:
-        vehicle = await self.get_vehicle_by_license_plate(license_plate)
-        return vehicle is not None
-
-
-class ParkingRecordRepository:
-    def __init__(self, db: AsyncSession):
-        self.db = db
-
-    async def create_parking_record(self, parking_record: ParkingRecord):
-        self.db.add(parking_record)
-        await self.db.commit()
-        await self.db.refresh(parking_record)
-        return parking_record
-
-    async def get_parking_duration(self, vehicle_id: uuid.UUID) -> int | None:
-        """Повертає тривалість паркування в хвилинах для поточного паркування"""
-        result = await self.db.execute(
-            select(ParkingRecord)
-            .where(ParkingRecord.vehicle_id == vehicle_id)
-            .order_by(ParkingRecord.entry_time.desc())
-        )
-        parking_record = result.scalar_one_or_none()
-
-        if parking_record and parking_record.exit_time:
-            duration = (parking_record.exit_time - parking_record.entry_time).total_seconds() // 60
-            return int(duration)
-        return None
-    
-
-    async def get_parking_history(self, license_plate: str) -> list[dict]:
-            vehicle_query = select(Vehicle).where(Vehicle.license_plate == license_plate)
-            vehicle_result = await self.db.execute(vehicle_query)
-            vehicle = vehicle_result.scalar_one_or_none()
-            if not vehicle:
-                return []
-
-            parking_query = select(ParkingRecord).where(ParkingRecord.vehicle_id == vehicle.id).order_by(ParkingRecord.entry_time)
-            parking_result = await self.db.execute(parking_query)
-            parking_records = parking_result.scalars().all()
-
-            history = []
-            for record in parking_records:
-                history.append({
-                    "entry_time": record.entry_time,
-                    "exit_time": record.exit_time,
-                    "duration_minutes": (record.exit_time - record.entry_time).total_seconds() // 60 if record.exit_time else None,
-                    "cost": record.cost
-                })
-            return history

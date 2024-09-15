@@ -4,14 +4,13 @@ import tempfile
 from fastapi import APIRouter, Depends, status, HTTPException, Request, BackgroundTasks, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession 
 from fastapi.templating import Jinja2Templates 
-from starlette.responses import HTMLResponse, JSONResponse
+from starlette.responses import HTMLResponse
 from src.database.db import get_db
 from src.models.models import User
-from src.repository.users import UserRepository, VehicleRepository, ParkingRecordRepository
+from src.repository.users import UserRepository
 from src.services.auth import auth_service
-from src.schemas.user import ParkingHistorySchema, UserDbSchema, RequestEmail
+from src.schemas.user import UserDbSchema, RequestEmail
 from src.services.email import send_email_reset_password
-from cv_service import initiate
 
 router = APIRouter(prefix="/users", tags=["users"])
 templates = Jinja2Templates(directory="src/services/templates")
@@ -57,55 +56,3 @@ async def reset_password(token: str,
 @router.get("/reset_password/{token}", response_class=HTMLResponse)
 async def get_reset_password_page(token: str, request_: Request):
     return templates.TemplateResponse("reset_password.html", {"request": request_, "token": token})
-
-
-@router.get("/vehicle/{license_plate}/check", response_model=dict)
-async def check_vehicle_registration(license_plate: str, db: AsyncSession = Depends(get_db)):
-    vehicle_repo = VehicleRepository(db)
-    is_registered = await vehicle_repo.is_vehicle_registered(license_plate)
-    return {"is_registered": is_registered}
-
-
-@router.get("/vehicle/{vehicle_id}/parking_duration", response_model=dict)
-async def get_parking_duration(vehicle_id: str, db: AsyncSession = Depends(get_db)):
-    parking_repo = ParkingRecordRepository(db)
-    duration = await parking_repo.get_parking_duration(uuid.UUID(vehicle_id))
-    if duration is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parking record not found or still in progress")
-    return {"duration_minutes": duration}
-
-
-@router.get("/{license_plate}/history_car", response_model=list[ParkingHistorySchema])
-async def get_parking_history(license_plate: str, db: AsyncSession = Depends(get_db)):
-    vehicle_repo = VehicleRepository(db)
-    parking_repo = ParkingRecordRepository(db)
-    vehicle = await vehicle_repo.get_vehicle_by_license_plate(license_plate)
-    if not vehicle:
-        raise HTTPException(status_code=404, detail="Vehicle not found")
-    parking_records = await parking_repo.get_parking_history(license_plate)
-    history_with_plate = [
-        {**record, "license_plate": license_plate} for record in parking_records
-    ]
-    
-    return history_with_plate
-
-
-@router.post("/upload_image/")
-async def upload_license_plate(
-    file: UploadFile = File(...), db: AsyncSession = Depends(get_db)
-):
-    try:
-        # Save file temporarily
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
-            tmp_file.write(await file.read())
-            tmp_file_path = tmp_file.name
-
-        # Pass the image to your ML model to get the license plate text
-        license_plate_text = initiate.main(tmp_file_path)
-
-        # Optionally, store the result in the database if needed
-        os.remove(tmp_file_path)
-
-        return JSONResponse({"license_plate": license_plate_text})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")

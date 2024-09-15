@@ -23,7 +23,7 @@ origins = ['*']
 
 
 # Налаштування для обслуговування статичних файлів
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
 # Налаштування для шаблонів
 templates = Jinja2Templates(directory="src/services/templates")

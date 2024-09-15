@@ -4,9 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession # type: ignore
 from sqlalchemy import select # type: ignore
 
 from src.repository import admin as repository_admin
-from src.schemas.admin import ParkingRateCreate, ParkingRateUpdate, ParkingRecordSchema, UserRoleUpdate, UserStatusUpdate, VehicleCheckSchema
+from src.schemas.admin import UserRoleUpdate, UserStatusUpdate
 from src.schemas.user import UserReadSchema
-from src.models.models import ParkingRate, User, Role, Vehicle
+from src.models.models import User, Role
 from src.services.role import RoleAccess
 from src.services.auth import auth_service
 from src.database.db import get_db
@@ -53,90 +53,3 @@ async def update_user_role(
         raise HTTPException(status_code=404, detail="User not found.")
     await repository_admin.update_user_role(user, body.role, db)
     return {"message": f"User role updated to {body.role}"}
-
-
-@router.post("/parking-rates", response_model=ParkingRateCreate, dependencies=[Depends(role_admin)])
-async def set_parking_rate(
-    rate_data: ParkingRateCreate,
-    db: AsyncSession = Depends(get_db)
-):
-    rate = await repository_admin.set_parking_rate(
-        rate_per_hour=rate_data.rate_per_hour,
-        max_daily_rate=rate_data.max_daily_rate,
-        currency=rate_data.currency,
-        db=db
-    )
-    return rate
-
-
-@router.put("/parking-lot", response_model=ParkingRateUpdate, dependencies=[Depends(role_admin)])
-async def get_parking_status(
-    db: AsyncSession = Depends(get_db)
-):
-    # Отримання останніх даних по парковці
-    parking_lot = await db.execute(select(ParkingRate).order_by(ParkingRate.created_at.desc()))
-    parking_lot = parking_lot.scalar_one_or_none()
-    
-    if parking_lot:
-        # Розрахунок кількості зайнятих місць
-        parking_lot.occupied_spaces = parking_lot.total_spaces - parking_lot.available_spaces
-        return parking_lot
-    else:
-        raise HTTPException(status_code=404, detail="Parking lot data not found.")
-
-
-@router.put("/parking-info", response_model=ParkingRateUpdate, dependencies=[Depends(role_admin)])
-async def update_parking_info(
-    vehicle_data: VehicleCheckSchema,
-    db: AsyncSession = Depends(get_db)
-):
-    # Отримання даних про автомобіль за номером
-    vehicle = await db.execute(select(Vehicle).where(Vehicle.license_plate == vehicle_data.license_plate))
-    vehicle = vehicle.scalar_one_or_none()
-
-    if not vehicle:
-        raise HTTPException(status_code=404, detail="Vehicle not found.")
-
-    # Створення звіту
-    report_filename = await repository_admin.generate_parking_report(vehicle.id, db)
-
-    return {"vehicle": vehicle, "report": report_filename}
-
-
-@router.post("/add_car_to_parking", response_model=ParkingRecordSchema, dependencies=[Depends(role_admin)])
-async def add_to_parking(vehicle_check: VehicleCheckSchema, db: AsyncSession = Depends(get_db)):
-    vehicle_repo = repository_admin.ParkingRecordRepository(db)
-    
-    try:
-        parking_record = await vehicle_repo.add_vehicle_to_parking(vehicle_check)
-        return parking_record
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    
-
-
-@router.put("/end-parking", response_model=ParkingRecordSchema, dependencies=[Depends(role_admin)])
-async def end_parking(vehicle_check: VehicleCheckSchema, db: AsyncSession = Depends(get_db)):
-    parking_repo = repository_admin.ParkingRecordRepository(db)
-    
-    try:
-        parking_record = await parking_repo.end_parking_by_license_plate(vehicle_check.license_plate)
-        return parking_record
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    
-
-
-@router.post("/add_to_blacklist", dependencies=[Depends(role_admin)])
-async def add_to_blacklist(
-    license_plate: str,
-    db: AsyncSession = Depends(get_db)
-):
-    blacklist_repo = repository_admin.BlackListRepository(db)
-    if await blacklist_repo.is_blacklisted(license_plate):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Vehicle is already blacklisted.")
-    
-    blacklisted_entry = await blacklist_repo.add_to_blacklist(license_plate)
-    return blacklisted_entry
-
-
