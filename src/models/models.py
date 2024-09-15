@@ -11,10 +11,18 @@ class Base(DeclarativeBase):
     pass
 
 
+
+class UserCourses(Base):
+    __tablename__ = 'user_courses'
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), index=True)
+    course_id = Column(UUID(as_uuid=True), ForeignKey('courses.id'), index=True)
+
+
 class Role(enum.Enum):
-    admin: str = "admin"
-    moderator: str = "moderator"
-    user: str = "user"
+    admin = "admin"
+    moderator = "moderator"
+    user = "user"
 
 
 class User(Base):
@@ -32,7 +40,8 @@ class User(Base):
     confirmed = Column(Boolean, default=False, nullable=False)
     is_active = Column(Boolean, default=False)
     phone = Column(BigInteger, nullable=False)
-    vehicles = relationship("Vehicle", back_populates="user")  
+
+    courses = relationship("Course", secondary='user_courses', back_populates="users")
 
     @hybrid_property
     def fullname(self):
@@ -47,47 +56,11 @@ class BlackList(Base):
     email = Column(String(320), unique=True, index=True, nullable=False)
 
 
-class Vehicle(Base):
-    __tablename__ = "vehicles"
-    
-    id = mapped_column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
-    license_plate = mapped_column(String(20), unique=True, index=True, nullable=False)
-    user_id = mapped_column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
-    is_blacklisted = mapped_column(Boolean, default=False)
-    
-    user = relationship("User", back_populates="vehicles")
-    parking_records = relationship("ParkingRecord", back_populates="vehicle")
+class Course(Base):
+    __tablename__ = 'courses'
 
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
+    name = Column(String, unique=True, index=True)
+    description = Column(String)
 
-class ParkingRecord(Base):
-    __tablename__ = "parking_records"
-    
-    id = mapped_column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
-    vehicle_id = mapped_column(UUID(as_uuid=True), ForeignKey('vehicles.id'), nullable=False)
-    entry_time = mapped_column(DateTime, default=func.now(), nullable=False)
-    exit_time = mapped_column(DateTime, nullable=True)
-    duration = mapped_column(Integer, nullable=True)
-    cost = mapped_column(Integer, nullable=True)
-    
-    vehicle = relationship("Vehicle", back_populates="parking_records")
-
-
-class ParkingRate(Base):
-    __tablename__ = "parking_rates"
-    
-    id = mapped_column(Integer, primary_key=True, index=True)
-    rate_per_hour = mapped_column(Integer, nullable=False)
-    max_daily_rate = mapped_column(Integer, nullable=True)
-    currency = mapped_column(String(10), default="USD", nullable=False)
-    total_spaces = mapped_column(Integer, nullable=False, default=100)  
-    available_spaces = mapped_column(Integer, nullable=False, default=100)  
-    created_at = mapped_column(DateTime, default=func.now())
-    updated_at = mapped_column(DateTime, default=func.now(), onupdate=func.now())
-
-
-
-class BlackListCar(Base):
-    __tablename__ = 'black_listcar'
-
-    id = Column(Integer, primary_key=True, index=True)
-    license_plate = Column(String(20), unique=True, index=True, nullable=False)
+    users = relationship("User", secondary='user_courses', back_populates="courses")

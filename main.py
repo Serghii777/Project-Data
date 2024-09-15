@@ -9,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 
 from src.database.db import get_db
 from src.routes import auth, users, admin
@@ -18,6 +20,13 @@ from src.utils.utils import periodic_clean_blacklist
 app = FastAPI(swagger_ui_parameters={"operationsSorter": "method"}, title="Parcking_application")
 
 origins = ['*']
+
+
+# Налаштування для обслуговування статичних файлів
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Налаштування для шаблонів
+templates = Jinja2Templates(directory="src/services/templates")
 
 
 @app.middleware("http")
@@ -58,8 +67,8 @@ app.include_router(admin.router, prefix="/api")
 
 
 @app.get("/")
-def index():
-    return {"message": "Parcking_application"}
+async def index(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
 
 
 @app.get("/api/healthchecker")
