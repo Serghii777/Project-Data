@@ -6,7 +6,8 @@ document.getElementById('registration-form').addEventListener('submit', async (e
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const passwordConfirmation = document.getElementById('password_confirmation').value;
-    
+    const phone = document.getElementById('phone').value;
+
     if (password !== passwordConfirmation) {
         document.getElementById('message').innerText = 'Паролі не співпадають.';
         return;
@@ -24,6 +25,7 @@ document.getElementById('registration-form').addEventListener('submit', async (e
                 email: email,
                 password: password,
                 password_confirmation: passwordConfirmation,
+                phone: phone,
             }),
         });
 

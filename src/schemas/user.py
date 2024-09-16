@@ -22,7 +22,6 @@ class UserDbSchema(UserReadSchema):
     updated_at: datetime
     confirmed: bool
     is_active: bool
-    model_config = ConfigDict(from_attributes=True)
     phone: Optional[int] = None
 
 

@@ -68,6 +68,14 @@ app.include_router(admin.router, prefix="/api")
 
 @app.get("/")
 async def index(request: Request):
+    return templates.TemplateResponse("front.html", {"request": request})
+
+@app.get("/login")
+async def login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/register")
+async def register(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
 

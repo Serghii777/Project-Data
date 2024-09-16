@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Курси польської мови</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <button onclick="window.location.href='/login';">Ввійти</button>
+            <button onclick="window.location.href='/register';">Зареєструватися</button>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Наші курси</h1>
+        <div class="course-list">
+            <!-- Кожен курс можна відобразити як блок -->
+            <div class="course">
+                <h2>Курс A1</h2>
+                <p>Опис курсу: Вивчення основ польської мови для початківців.</p>
+                <button class="buy-btn">Купити</button>
+            </div>
+            <div class="course">
+                <h2>Курс A2</h2>
+                <p>Опис курсу: Продовження базового рівня, більше розмовної практики.</p>
+                <button class="buy-btn">Купити</button>
+            </div>
+            <!-- Додаткові курси -->
+        </div>
+    </main>
+
+    <!-- Плаваюча кнопка для купівлі -->
+    <div class="floating-buy-btn">
+        <button>Купити зараз</button>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

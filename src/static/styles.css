@@ -51,3 +51,83 @@ button:hover {
     margin-top: 1rem;
     color: red;
 }
+
+
+/* styles.css */
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+}
+
+header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem;
+    background-color: #007bff;
+}
+
+header button {
+    background-color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    margin: 0 0.5rem;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+header button:hover {
+    background-color: #f0f0f0;
+}
+
+main {
+    padding: 2rem;
+}
+
+.course-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.course {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+}
+
+.buy-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.buy-btn:hover {
+    background-color: #218838;
+}
+
+/* Плаваюча кнопка */
+.floating-buy-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+}
+
+.floating-buy-btn button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.floating-buy-btn button:hover {
+    background-color: #218838;
+}
