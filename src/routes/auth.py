@@ -34,7 +34,12 @@ async def signup(background_tasks: BackgroundTasks,
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=messages.ACCOUNT_EXISTS)
     body.password = await auth_service.get_password_hash(body.password)
     new_user = await repository_users.create_user(body, db=db)
-    background_tasks.add_task(send_email, new_user.email, new_user.fullname, str(request.base_url))
+    # Відправка email для підтвердження
+    token = await auth_service.create_confirmation_token(new_user.email)
+    confirmation_link = f"{request.base_url}api/auth/confirmed_email/{token}"
+    
+    # Додаємо завдання на відправку email
+    background_tasks.add_task(send_email, new_user.email, new_user.fullname, confirmation_link)
 
     return {"user": new_user, "detail": "User successfully created. Check your email for confirmation."}
 
